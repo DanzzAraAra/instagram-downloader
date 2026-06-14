@@ -525,15 +525,19 @@
                     result = await directResponse.json();
                 }
 
-                if (!result || !result.status || !result.result) {
-                    throw new Error('Invalid data structure from API');
+                if (result && result.status === false) {
+                    throw new Error(result.message || 'Server API mengembalikan status false');
+                }
+
+                if (!result || !result.result) {
+                    throw new Error('Data tidak ditemukan atau URL tidak valid.');
                 }
 
                 displayData(result.result);
                 completeProgress();
             } catch (error) {
                 stopProgress();
-                alert('Fetch failed. The server may be unreachable or the link is invalid.');
+                alert(`Error: ${error.message}`);
             }
         }
 
@@ -544,7 +548,7 @@
                 <div class="profile-card">
                     <div class="username">@${escapeHTML(data.username || 'instagram_user')}</div>
                     <div class="stats">
-                        <span>Type: ${escapeHTML(data.type.toUpperCase())}</span>
+                        <span>Type: ${escapeHTML((data.type || 'unknown').toUpperCase())}</span>
                     </div>
                 </div>
             `;
@@ -583,6 +587,8 @@
                 });
 
                 template += `</div>`;
+            } else {
+                template += `<div style="text-align:center; color:#ef4444; margin-top:20px;">Format tidak didukung atau data kosong.</div>`;
             }
 
             resultView.innerHTML = template;
@@ -623,7 +629,7 @@
                     window.URL.revokeObjectURL(localUrl);
                 }, 100);
             } catch (e) {
-                alert('Download failed. The file might be blocked by the origin server.');
+                alert('Download gagal. Kemungkinan file di-block oleh origin server (CORS) atau expired.');
             } finally {
                 element.disabled = false;
                 element.innerHTML = originalHTML;
