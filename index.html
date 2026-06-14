@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Downloader</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background: #0b1120;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            color: #e2e8f0;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 620px;
+            background: #111827;
+            padding: 32px 28px;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.06);
+        }
+
+        h1 {
+            font-size: clamp(24px, 4vw, 30px);
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, #f43f5e, #ec4899, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.4px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 400;
+            margin-bottom: 28px;
+            letter-spacing: 0.1px;
+        }
+
+        .input-box {
+            display: flex;
+            gap: 8px;
+            background: #0f172a;
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid #1e293b;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            align-items: center;
+        }
+
+        .input-box:focus-within {
+            border-color: #ec4899;
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.12);
+        }
+
+        input {
+            flex: 1;
+            min-width: 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #f1f5f9;
+            font-size: 15px;
+            padding: 12px 14px;
+            font-weight: 450;
+            letter-spacing: 0.1px;
+            font-family: inherit;
+        }
+
+        input::placeholder {
+            color: #475569;
+            font-weight: 400;
+        }
+
+        .btn-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 42px;
+            width: 42px;
+            height: 42px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+            color: #fff;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .btn-icon:active {
+            transform: scale(0.94);
+        }
+
+        .btn-paste {
+            background: #1e293b;
+            color: #cbd5e1;
+        }
+        .btn-paste:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .btn-search {
+            background: #ec4899;
+            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.25);
+        }
+        .btn-search:hover {
+            background: #db2777;
+            box-shadow: 0 6px 16px rgba(236, 72, 153, 0.35);
+        }
+
+        .progress-container {
+            display: none;
+            width: 100%;
+            height: 4px;
+            background: #1e293b;
+            border-radius: 4px;
+            margin-top: 24px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f43f5e, #d946ef);
+            border-radius: 4px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 28px;
+            animation: fadeSlide 0.4s ease forwards;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .profile-card {
+            background: #0f172a;
+            padding: 18px 16px;
+            border-radius: 14px;
+            border: 1px solid #1e293b;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .username {
+            font-weight: 650;
+            font-size: 17px;
+            color: #f8fafc;
+            margin-bottom: 4px;
+            letter-spacing: -0.2px;
+        }
+
+        .stats {
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            font-weight: 450;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 24px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            aspect-ratio: 9 / 16;
+            max-height: 480px;
+        }
+
+        .video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            background: #000;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .photo-card {
+            background: #0f172a;
+            border-radius: 14px;
+            border: 1px solid #1e293b;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .photo-card:active {
+            transform: scale(0.97);
+        }
+
+        .photo-card img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #1e293b;
+            display: block;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 11px 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            text-align: center;
+            gap: 6px;
+            letter-spacing: 0.1px;
+            color: #fff;
+            background: #1e293b;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .btn-download:hover {
+            background: #334155;
+        }
+        .btn-download:active {
+            opacity: 0.85;
+            transform: scale(0.97);
+        }
+        .btn-download:disabled {
+            background: #0f172a;
+            color: #475569;
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none;
+        }
+
+        .action-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-primary-dl {
+            background: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+        .btn-primary-dl:hover {
+            background: #1d4ed8;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary-dl {
+            background: #0d9488;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.18);
+        }
+        .btn-secondary-dl:hover {
+            background: #0f766e;
+            box-shadow: 0 6px 16px rgba(13, 148, 136, 0.28);
+        }
+
+        .btn-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (min-width: 480px) {
+            .container {
+                padding: 36px 32px;
+                border-radius: 26px;
+            }
+            .photo-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+            }
+            .btn-download {
+                font-size: 13.5px;
+                padding: 12px 16px;
+            }
+            .input-box {
+                padding: 7px;
+                border-radius: 18px;
+            }
+            input {
+                font-size: 15px;
+                padding: 13px 16px;
+            }
+            .btn-icon {
+                min-width: 44px;
+                width: 44px;
+                height: 44px;
+                border-radius: 13px;
+            }
+            .video-wrapper {
+                border-radius: 16px;
+                max-height: 520px;
+            }
+        }
+
+        @media (min-width: 640px) {
+            .container {
+                padding: 40px 36px;
+                border-radius: 28px;
+            }
+            .photo-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 18px;
+            }
+            .photo-card {
+                padding: 12px;
+                gap: 12px;
+            }
+            .btn-download {
+                font-size: 14px;
+                padding: 12px 18px;
+                border-radius: 11px;
+            }
+            .video-wrapper {
+                max-height: 560px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .container {
+                padding: 24px 16px;
+                border-radius: 20px;
+            }
+            h1 {
+                font-size: 22px;
+            }
+            p.subtitle {
+                font-size: 12px;
+                margin-bottom: 22px;
+            }
+            input {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+            .btn-icon {
+                min-width: 38px;
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+            }
+            .btn-download {
+                font-size: 12px;
+                padding: 10px 12px;
+            }
+            .photo-grid {
+                gap: 10px;
+            }
+            .photo-card {
+                padding: 8px;
+                gap: 8px;
+            }
+            .photo-card img {
+                border-radius: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Instagram Downloader</h1>
+        <p class="subtitle">Download Instagram videos, photos, and audio in high quality</p>
+
+        <div class="input-box">
+            <input type="text" id="targetUrl" placeholder="Paste Instagram link here..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            
+            <button class="btn-icon btn-paste" onclick="pasteFromClipboard()" aria-label="Paste from clipboard" title="Paste">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </button>
+            
+            <button class="btn-icon btn-search" onclick="processUrl()" aria-label="Download media" title="Download">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="progress-container" id="mainLoader">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="result-container" id="resultView"></div>
+    </div>
+
+    <script>
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                const input = document.getElementById('targetUrl');
+                input.value = text;
+                input.focus();
+            } catch (err) {
+                alert('Unable to read clipboard. Please allow clipboard permissions.');
+            }
+        }
+
+        let progressInterval;
+
+        function startProgress() {
+            const loader = document.getElementById('mainLoader');
+            const bar = document.getElementById('progressBar');
+            loader.style.display = 'block';
+            bar.style.width = '0%';
+            bar.style.transition = 'none';
+            
+            let width = 0;
+            progressInterval = setInterval(() => {
+                if (width >= 85) {
+                    clearInterval(progressInterval);
+                } else {
+                    width += Math.random() * 16 + 4;
+                    if (width > 85) width = 85;
+                    bar.style.transition = 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                    bar.style.width = width + '%';
+                }
+            }, 260);
+        }
+
+        function completeProgress() {
+            clearInterval(progressInterval);
+            const bar = document.getElementById('progressBar');
+            bar.style.transition = 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+            bar.style.width = '100%';
+            setTimeout(() => {
+                document.getElementById('mainLoader').style.display = 'none';
+                bar.style.width = '0%';
+                bar.style.transition = 'none';
+            }, 350);
+        }
+
+        function stopProgress() {
+            clearInterval(progressInterval);
+            const loader = document.getElementById('mainLoader');
+            const bar = document.getElementById('progressBar');
+            loader.style.display = 'none';
+            bar.style.width = '0%';
+            bar.style.transition = 'none';
+        }
+
+        async function processUrl() {
+            const url = document.getElementById('targetUrl').value.trim();
+            const resultView = document.getElementById('resultView');
+
+            if (!url) return alert('Please enter a valid Instagram link');
+
+            startProgress();
+            resultView.style.display = 'none';
+            resultView.innerHTML = '';
+
+            try {
+                let result;
+                try {
+                    const response = await fetch(`/api/fetch?url=${encodeURIComponent(url)}`);
+                    result = await response.json();
+                } catch (fallbackError) {
+                    const directApiUrl = `https://api.danzy.web.id/api/download/instagram?url=${encodeURIComponent(url)}`;
+                    const directResponse = await fetch(directApiUrl);
+                    result = await directResponse.json();
+                }
+
+                if (!result || !result.status || !result.result) {
+                    throw new Error('Invalid data structure from API');
+                }
+
+                displayData(result.result);
+                completeProgress();
+            } catch (error) {
+                stopProgress();
+                alert('Fetch failed. The server may be unreachable or the link is invalid.');
+            }
+        }
+
+        function displayData(data) {
+            const resultView = document.getElementById('resultView');
+            
+            let template = `
+                <div class="profile-card">
+                    <div class="username">@${escapeHTML(data.username || 'instagram_user')}</div>
+                    <div class="stats">
+                        <span>Type: ${escapeHTML(data.type.toUpperCase())}</span>
+                    </div>
+                </div>
+            `;
+
+            if (data.type === 'video') {
+                const streamUrl = data.videos && data.videos.length > 0 ? data.videos[0] : '';
+                const audioData = data.mp3 && data.mp3.length > 0 ? data.mp3[0].url : '';
+                
+                template += `
+                    <div class="video-wrapper">
+                        <video src="${streamUrl}" controls preload="metadata" playsinline></video>
+                    </div>
+                    <div class="action-group">
+                        <button class="btn-download btn-primary-dl" onclick="executeDownload('${escapeAttr(streamUrl)}', 'video', this)">Download Video</button>
+                `;
+
+                if (audioData) {
+                    template += `
+                        <button class="btn-download btn-secondary-dl" onclick="executeDownload('${escapeAttr(audioData)}', 'mp3', this)">Download Audio (MP3)</button>
+                    `;
+                }
+
+                template += `</div>`;
+            } else if (data.type === 'photo') {
+                template += `<div class="photo-grid">`;
+                
+                const imagesList = data.images || [];
+
+                imagesList.forEach(imgUrl => {
+                    template += `
+                        <div class="photo-card">
+                            <img src="${imgUrl}" alt="Slide preview" loading="lazy">
+                            <button class="btn-download" onclick="executeDownload('${escapeAttr(imgUrl)}', 'photo', this)">Download Image</button>
+                        </div>
+                    `;
+                });
+
+                template += `</div>`;
+            }
+
+            resultView.innerHTML = template;
+            resultView.style.display = 'block';
+            resultView.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        async function executeDownload(target, format, element) {
+            if (!target || target === 'undefined' || target === 'null') {
+                return alert('Media URL not available');
+            }
+
+            const originalHTML = element.innerHTML;
+            const originalText = element.innerText;
+            element.disabled = true;
+            element.innerHTML = `<span class="btn-spinner"></span> Processing`;
+
+            try {
+                const response = await fetch(`/api/download?url=${encodeURIComponent(target)}&type=${format}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const dataBlob = await response.blob();
+                const localUrl = window.URL.createObjectURL(dataBlob);
+                
+                const downloader = document.createElement('a');
+                downloader.href = localUrl;
+                
+                let fileExtension = '.mp4';
+                if (format === 'mp3') fileExtension = '.mp3';
+                if (format === 'photo') fileExtension = '.jpeg';
+                
+                downloader.download = `instagram_media_${Date.now()}${fileExtension}`;
+                document.body.appendChild(downloader);
+                downloader.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(downloader);
+                    window.URL.revokeObjectURL(localUrl);
+                }, 100);
+            } catch (e) {
+                alert('Download failed. The file might be blocked by the origin server.');
+            } finally {
+                element.disabled = false;
+                element.innerHTML = originalHTML;
+                if (element.innerText.includes('Processing')) {
+                    element.innerText = originalText;
+                }
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        function escapeAttr(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        document.getElementById('targetUrl').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                processUrl();
+            }
+        });
+    </script>
+</body>
+</html>
